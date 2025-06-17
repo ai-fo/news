@@ -75,8 +75,9 @@ class TranscriptBySource:
             # Ajouter une note pour les sources avec restrictions
             if article.get('source') in ['AI Business']:
                 transcript.append("")
-                transcript.append("Note: Cette source a des restrictions d'accès qui limitent")
-                transcript.append("la récupération automatique du contenu complet.")
+                transcript.append("Note: AI Business utilise une protection anti-scraping.")
+                transcript.append("Le contenu affiché provient uniquement du flux RSS.")
+                transcript.append("Pour lire l'article complet, visitez le lien ci-dessus.")
         
         transcript.append("=" * 80)
         transcript.append("")  # Ligne vide finale

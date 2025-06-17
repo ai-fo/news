@@ -54,16 +54,44 @@ class NewsletterScraper:
                 for entry in feed.entries[:ARTICLES_PER_SOURCE]:
                     # Récupération du contenu depuis le RSS
                     rss_content = ""
-                    if entry.get("content"):
-                        rss_content = entry.get("content", [{}])[0].get("value", "")
-                    elif entry.get("content_detail"):
-                        rss_content = entry.get("content_detail", {}).get("value", "")
-                    elif entry.get("description"):
-                        rss_content = entry.get("description", "")
                     
-                    # Pour certains flux, le contenu peut être dans d'autres champs
-                    if not rss_content and entry.get("summary_detail"):
-                        rss_content = entry.get("summary_detail", {}).get("value", "")
+                    # Pour AI Business, essayer d'extraire plus de contenu du RSS
+                    if name == "AI Business":
+                        # Chercher dans tous les champs possibles
+                        content_fields = []
+                        
+                        if entry.get("content"):
+                            for content_item in entry.get("content", []):
+                                if isinstance(content_item, dict) and content_item.get("value"):
+                                    content_fields.append(content_item.get("value", ""))
+                        
+                        if entry.get("content_detail") and entry.get("content_detail", {}).get("value"):
+                            content_fields.append(entry.get("content_detail", {}).get("value", ""))
+                        
+                        if entry.get("summary_detail") and entry.get("summary_detail", {}).get("value"):
+                            content_fields.append(entry.get("summary_detail", {}).get("value", ""))
+                        
+                        if entry.get("description"):
+                            content_fields.append(entry.get("description", ""))
+                        
+                        if entry.get("summary"):
+                            content_fields.append(entry.get("summary", ""))
+                        
+                        # Prendre le contenu le plus long
+                        if content_fields:
+                            rss_content = max(content_fields, key=len)
+                    else:
+                        # Logique standard pour les autres sources
+                        if entry.get("content"):
+                            rss_content = entry.get("content", [{}])[0].get("value", "")
+                        elif entry.get("content_detail"):
+                            rss_content = entry.get("content_detail", {}).get("value", "")
+                        elif entry.get("description"):
+                            rss_content = entry.get("description", "")
+                        
+                        # Pour certains flux, le contenu peut être dans d'autres champs
+                        if not rss_content and entry.get("summary_detail"):
+                            rss_content = entry.get("summary_detail", {}).get("value", "")
                     
                     # Nettoyer le contenu HTML du RSS
                     if rss_content:
