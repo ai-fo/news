@@ -11,3 +11,6 @@ data/
 transcripts/
 .DS_Store
 *.log
+.python-version
+pyproject.toml
+uv.lock

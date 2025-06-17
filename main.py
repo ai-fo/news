@@ -2,7 +2,6 @@ import asyncio
 import json
 from datetime import datetime
 from scraper import NewsletterScraper
-from transcript_generator import TranscriptGenerator
 from transcript_by_source import TranscriptBySource
 
 async def main():
@@ -42,30 +41,12 @@ async def main():
     
     print(f"📊 Rapport de statut sauvegardé dans {status_file}")
     
-    # Générer le transcript global (newsletter)
-    generator = TranscriptGenerator()
-    transcript = generator.generate_transcript(articles)
-    
-    transcript_file = f"transcripts/newsletter_{timestamp}.md"
-    with open(transcript_file, 'w', encoding='utf-8') as f:
-        f.write(transcript)
-    
-    print(f"📄 Newsletter globale générée dans {transcript_file}")
-    
     # Générer les transcripts par source
     print(f"\n📂 Génération des transcripts par source...")
     source_transcripts = TranscriptBySource()
     saved_files = source_transcripts.save_transcripts_by_source(articles)
     
     print(f"\n✅ Transcripts générés pour {len(saved_files)} sources")
-    
-    # Optionnel: Fusionner tous les transcripts
-    from merge_transcripts import TranscriptMerger
-    print(f"\n🔀 Fusion des transcripts...")
-    merger = TranscriptMerger()
-    merged_file = merger.merge_by_timestamp(timestamp)
-    if merged_file:
-        print(f"📄 Transcript fusionné: {merged_file}")
 
 if __name__ == "__main__":
     asyncio.run(main())

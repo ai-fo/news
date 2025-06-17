@@ -156,9 +156,6 @@ class TranscriptBySource:
             saved_files[source_name] = filepath
             print(f"✅ {source_name}: {len(source_articles)} articles → {filepath}")
         
-        # Créer aussi un fichier index
-        self.create_index_file(saved_files, timestamp)
-        
         return saved_files
     
     def create_index_file(self, saved_files: Dict[str, str], timestamp: str):
