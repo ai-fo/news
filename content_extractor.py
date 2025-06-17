@@ -20,8 +20,12 @@ class ContentExtractor:
                 soup = BeautifulSoup(html, 'html.parser')
                 
                 # Supprimer les scripts et styles
-                for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                for script in soup(["script", "style", "nav", "header", "footer", "aside", "noscript"]):
                     script.decompose()
+                
+                # Supprimer aussi les éléments de navigation et publicitaires
+                for elem in soup.select('.advertisement, .ads, .social-share, .related-posts, .sidebar'):
+                    elem.decompose()
                 
                 # Stratégies d'extraction selon le site
                 content = None
@@ -46,7 +50,17 @@ class ContentExtractor:
                     'div.post-entry',
                     'div.single-post-content',
                     'div.post-inner',
-                    'section.post-content'
+                    'section.post-content',
+                    # Sélecteurs spécifiques pour AI Business
+                    'div.article__content',
+                    'div.article__body',
+                    'div.article-body',
+                    'section.article-content',
+                    'div.text-content',
+                    'div.story-content',
+                    'div[itemprop="articleBody"]',
+                    'div.content-area',
+                    'main article'
                 ]
                 
                 for selector in article_selectors:
@@ -58,9 +72,26 @@ class ContentExtractor:
                 
                 # Si pas de contenu trouvé, essayer avec les paragraphes
                 if not content or len(content) < 200:
-                    paragraphs = soup.find_all('p')
-                    if len(paragraphs) > 3:
-                        content = '\n'.join([p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 50])
+                    # Stratégie spécifique pour AI Business : chercher dans le main ou body
+                    main_content = soup.find('main') or soup.find('body')
+                    if main_content:
+                        # Extraire tous les paragraphes du contenu principal
+                        paragraphs = main_content.find_all('p')
+                        valid_paragraphs = []
+                        for p in paragraphs:
+                            text = p.get_text(strip=True)
+                            # Filtrer les paragraphes courts et ceux qui semblent être des métadonnées
+                            if len(text) > 50 and not any(skip in text.lower() for skip in ['cookie', 'privacy policy', 'terms of use', 'subscribe', 'newsletter']):
+                                valid_paragraphs.append(text)
+                        
+                        if len(valid_paragraphs) > 2:
+                            content = '\n\n'.join(valid_paragraphs)
+                    
+                    # Fallback : utiliser tous les paragraphes
+                    if not content or len(content) < 200:
+                        paragraphs = soup.find_all('p')
+                        if len(paragraphs) > 3:
+                            content = '\n'.join([p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 50])
                 
                 # Nettoyer le texte
                 if content:
