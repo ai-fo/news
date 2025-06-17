@@ -69,6 +69,14 @@ class TranscriptBySource:
             # Si pas de contenu complet, utiliser le résumé étendu
             transcript.append("CONTENU:")
             transcript.append("(Contenu complet non disponible, résumé étendu affiché)")
+            transcript.append("")
+            transcript.append(self.wrap_text(article['summary'], 80))
+            
+            # Ajouter une note pour les sources avec restrictions
+            if article.get('source') in ['AI Business']:
+                transcript.append("")
+                transcript.append("Note: Cette source a des restrictions d'accès qui limitent")
+                transcript.append("la récupération automatique du contenu complet.")
         
         transcript.append("=" * 80)
         transcript.append("")  # Ligne vide finale

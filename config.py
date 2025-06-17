@@ -7,9 +7,12 @@ SOURCES_NEED_FULL_CONTENT = [
     "TechCrunch AI",
     "VentureBeat AI",
     "L'Usine Digitale IA",
-    "AI Business",
+    # "AI Business",  # Désactivé temporairement à cause du blocage 403
     "AI Trends"
 ]
+
+# Sources avec des restrictions d'accès
+RESTRICTED_SOURCES = ["AI Business"]
 
 # Limite d'articles par source
 ARTICLES_PER_SOURCE = 10

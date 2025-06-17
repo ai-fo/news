@@ -1,20 +1,38 @@
 import aiohttp
 from bs4 import BeautifulSoup
 import re
+import asyncio
 from typing import Optional
 
 class ContentExtractor:
     def __init__(self):
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1"
         }
     
     async def extract_full_content(self, url: str, session: aiohttp.ClientSession) -> Optional[str]:
         """Extrait le contenu complet d'une page web"""
         try:
-            async with session.get(url, headers=self.headers, timeout=30) as response:
+            # Pour AI Business, ajouter un délai pour éviter le rate limiting
+            if "aibusiness.com" in url:
+                await asyncio.sleep(1)
+            
+            async with session.get(url, headers=self.headers, timeout=30, ssl=False) as response:
                 if response.status != 200:
-                    return None
+                    # Si 403, essayer avec une pause plus longue
+                    if response.status == 403 and "aibusiness.com" in url:
+                        await asyncio.sleep(3)
+                        async with session.get(url, headers=self.headers, timeout=30, ssl=False) as retry_response:
+                            if retry_response.status != 200:
+                                return None
+                            response = retry_response
+                    else:
+                        return None
                 
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
