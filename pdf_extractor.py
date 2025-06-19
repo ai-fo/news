@@ -75,6 +75,28 @@ class PDFExtractor:
         # Supprimer les caractères de contrôle
         text = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f-\x9f]', '', text)
         
+        # Supprimer les surrogates Unicode invalides
+        text = text.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
+        
+        # Remplacer les caractères mathématiques problématiques par des versions ASCII
+        replacements = {
+            '\ud835\udc00': 'A', '\ud835\udc01': 'B', '\ud835\udc02': 'C',
+            '\ud835\udc03': 'D', '\ud835\udc04': 'E', '\ud835\udc05': 'F',
+            '\ud835\udc06': 'G', '\ud835\udc07': 'H', '\ud835\udc08': 'I',
+            '\ud835\udc09': 'J', '\ud835\udc0a': 'K', '\ud835\udc0b': 'L',
+            '\ud835\udc0c': 'M', '\ud835\udc0d': 'N', '\ud835\udc0e': 'O',
+            '\ud835\udc0f': 'P', '\ud835\udc10': 'Q', '\ud835\udc11': 'R',
+            '\ud835\udc12': 'S', '\ud835\udc13': 'T', '\ud835\udc14': 'U',
+            '\ud835\udc15': 'V', '\ud835\udc16': 'W', '\ud835\udc17': 'X',
+            '\ud835\udc18': 'Y', '\ud835\udc19': 'Z',
+        }
+        
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        
+        # Supprimer tout caractère surrogate restant
+        text = re.sub(r'[\ud800-\udfff]', '', text)
+        
         # Remplacer les espaces multiples
         text = re.sub(r'\s+', ' ', text)
         

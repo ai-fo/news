@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from datetime import datetime
 from scraper import NewsletterScraper
 from transcript_by_source import TranscriptBySource
@@ -29,8 +30,20 @@ async def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"data/raw_articles_{timestamp}.json"
     
+    # Nettoyer les articles des caractères problématiques avant la sauvegarde
+    cleaned_articles = []
+    for article in articles:
+        cleaned_article = {}
+        for key, value in article.items():
+            if isinstance(value, str):
+                # Supprimer les surrogates Unicode invalides
+                value = value.encode('utf-8', 'surrogatepass').decode('utf-8', 'replace')
+                value = re.sub(r'[\ud800-\udfff]', '', value)
+            cleaned_article[key] = value
+        cleaned_articles.append(cleaned_article)
+    
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(articles, f, ensure_ascii=False, indent=2)
+        json.dump(cleaned_articles, f, ensure_ascii=False, indent=2)
     
     print(f"📁 Articles sauvegardés dans {output_file}")
     
@@ -41,10 +54,10 @@ async def main():
     
     print(f"📊 Rapport de statut sauvegardé dans {status_file}")
     
-    # Générer les transcripts par source
+    # Générer les transcripts par source (utiliser les articles nettoyés)
     print(f"\n📂 Génération des transcripts par source...")
     source_transcripts = TranscriptBySource()
-    saved_files = source_transcripts.save_transcripts_by_source(articles)
+    saved_files = source_transcripts.save_transcripts_by_source(cleaned_articles)
     
     print(f"\n✅ Transcripts générés pour {len(saved_files)} sources")
 
