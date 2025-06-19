@@ -7,12 +7,14 @@ import json
 from typing import List, Dict, Optional
 import re
 from content_extractor import ContentExtractor
+from pdf_extractor import PDFExtractor
 from config import SOURCES_NEED_FULL_CONTENT, ARTICLES_PER_SOURCE, MIN_CONTENT_LENGTH
 
 class NewsletterScraper:
     def __init__(self):
         self.source_status = {}
         self.content_extractor = ContentExtractor()
+        self.pdf_extractor = PDFExtractor()
         self.rss_sources = {
             "ActuIA": "https://www.actuia.com/feed",
             "MIT Tech Review AI": "https://www.technologyreview.com/feed/",
@@ -99,7 +101,21 @@ class NewsletterScraper:
                     
                     # Pour ActuIA et autres sources avec contenu partiel, récupérer depuis la page
                     full_content = rss_content
-                    if fetch_full_content and name in SOURCES_NEED_FULL_CONTENT:
+                    
+                    # Traitement spécial pour arXiv : extraire depuis le PDF
+                    if name in ["arXiv AI", "arXiv ML"] and fetch_full_content:
+                        article_url = entry.get("link")
+                        if article_url:
+                            try:
+                                pdf_content = await self.pdf_extractor.extract_arxiv_content(article_url, session)
+                                if pdf_content:
+                                    full_content = pdf_content
+                                    print(f"  ↳ Contenu PDF extrait pour: {entry.get('title', '')[:50]}...")
+                            except Exception as e:
+                                print(f"  ↳ Impossible d'extraire le PDF: {str(e)}")
+                    
+                    # Pour les autres sources nécessitant l'extraction web
+                    elif fetch_full_content and name in SOURCES_NEED_FULL_CONTENT:
                         article_url = entry.get("link")
                         if article_url and (not rss_content or len(rss_content) < MIN_CONTENT_LENGTH):
                             try:

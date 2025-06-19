@@ -6,6 +6,7 @@ Un système automatisé pour collecter et organiser les dernières actualités e
 
 - **Scraping multi-sources** : Collecte automatique depuis 19+ sources RSS et API
 - **Récupération de contenu complet** : Extraction intelligente du contenu complet pour les sources avec RSS tronqués
+- **Extraction PDF arXiv** : Récupération automatique du contenu des papers arXiv depuis les PDFs
 - **Organisation par source** : Génération de transcripts individuels par source
 - **Rapport de statut** : Suivi des sources fonctionnelles et en erreur
 
@@ -19,7 +20,7 @@ Un système automatisé pour collecter et organiser les dernières actualités e
 - MarkTechPost
 
 ### Recherche académique
-- arXiv (cs.AI, cs.LG)
+- arXiv (cs.AI, cs.LG) - **Extraction automatique des PDFs**
 - ScienceDaily – AI
 - Google AI Blog
 - OpenAI Blog
