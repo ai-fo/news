@@ -38,26 +38,25 @@ class PDFExtractor:
                     num_pages = len(pdf_reader.pages)
                     print(f"  ↳ PDF chargé: {num_pages} pages")
                     
-                    # Extraire le texte de plus de pages pour avoir plus de contenu
+                    # Extraire le texte de toutes les pages (ou max 30 pour les très longs)
                     extracted_text = []
-                    pages_to_extract = min(15, num_pages)  # Augmenter à 15 pages
+                    pages_to_extract = min(30, num_pages)  # Jusqu'à 30 pages
+                    
+                    print(f"  ↳ Extraction de {pages_to_extract} pages...")
                     
                     for page_num in range(pages_to_extract):
                         page = pdf_reader.pages[page_num]
                         text = page.extract_text()
                         if text:
-                            extracted_text.append(f"\n--- PAGE {page_num + 1} ---\n{text}")
+                            extracted_text.append(text)
                     
-                    full_text = '\n'.join(extracted_text)
+                    full_text = '\n\n'.join(extracted_text)
                     
                     # Nettoyer le texte
                     full_text = self.clean_pdf_text(full_text)
                     
-                    # Extraire les sections principales
-                    sections = self.extract_paper_sections(full_text)
-                    
-                    # Formater le contenu
-                    formatted_content = self.format_arxiv_content(sections, num_pages)
+                    # Pour arXiv, on veut le texte complet structuré
+                    formatted_content = self.format_full_arxiv_content(full_text, num_pages, pages_to_extract)
                     
                     print(f"  ↳ Contenu extrait: {len(formatted_content)} caractères")
                     
@@ -162,5 +161,32 @@ class PDFExtractor:
         content_parts.append("\n" + "-" * 40)
         content_parts.append("Note: Extraction des 15 premières pages du paper.")
         content_parts.append("Pour lire le paper complet, consultez le lien PDF ci-dessus.")
+        
+        return '\n'.join(content_parts)
+    
+    def format_full_arxiv_content(self, text: str, total_pages: int, extracted_pages: int) -> str:
+        """Formate le contenu complet du PDF arXiv"""
+        # Limiter la taille totale pour éviter des transcripts trop longs
+        max_chars = 20000  # 20k caractères max
+        
+        if len(text) > max_chars:
+            # Trouver la fin de la dernière phrase complète avant la limite
+            truncate_pos = text[:max_chars].rfind('. ')
+            if truncate_pos > 0:
+                text = text[:truncate_pos + 1]
+            else:
+                text = text[:max_chars]
+        
+        content_parts = []
+        content_parts.append("📄 CONTENU DU PAPER ARXIV")
+        content_parts.append(f"Pages extraites: {extracted_pages} sur {total_pages} pages totales")
+        content_parts.append(f"Caractères extraits: {len(text)}")
+        content_parts.append("=" * 80)
+        content_parts.append("")
+        content_parts.append(text)
+        content_parts.append("")
+        content_parts.append("=" * 80)
+        content_parts.append(f"FIN DE L'EXTRACTION ({extracted_pages} pages)")
+        content_parts.append("Pour consulter le paper complet, utilisez le lien PDF ci-dessus.")
         
         return '\n'.join(content_parts)
