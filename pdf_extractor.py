@@ -38,17 +38,21 @@ class PDFExtractor:
                     num_pages = len(pdf_reader.pages)
                     print(f"  ↳ PDF chargé: {num_pages} pages")
                     
-                    # Extraire le texte de toutes les pages (ou max 30 pour les très longs)
+                    # Extraire le texte de TOUTES les pages
                     extracted_text = []
-                    pages_to_extract = min(30, num_pages)  # Jusqu'à 30 pages
+                    pages_to_extract = num_pages  # Extraire TOUT le PDF
                     
-                    print(f"  ↳ Extraction de {pages_to_extract} pages...")
+                    print(f"  ↳ Extraction de TOUTES les {pages_to_extract} pages...")
                     
                     for page_num in range(pages_to_extract):
                         page = pdf_reader.pages[page_num]
                         text = page.extract_text()
                         if text:
                             extracted_text.append(text)
+                        
+                        # Afficher la progression pour les longs PDFs
+                        if (page_num + 1) % 10 == 0:
+                            print(f"    ... {page_num + 1}/{pages_to_extract} pages extraites")
                     
                     full_text = '\n\n'.join(extracted_text)
                     
@@ -188,27 +192,17 @@ class PDFExtractor:
     
     def format_full_arxiv_content(self, text: str, total_pages: int, extracted_pages: int) -> str:
         """Formate le contenu complet du PDF arXiv"""
-        # Limiter la taille totale pour éviter des transcripts trop longs
-        max_chars = 20000  # 20k caractères max
-        
-        if len(text) > max_chars:
-            # Trouver la fin de la dernière phrase complète avant la limite
-            truncate_pos = text[:max_chars].rfind('. ')
-            if truncate_pos > 0:
-                text = text[:truncate_pos + 1]
-            else:
-                text = text[:max_chars]
+        # PAS DE LIMITE - on veut TOUT le contenu
         
         content_parts = []
-        content_parts.append("📄 CONTENU DU PAPER ARXIV")
-        content_parts.append(f"Pages extraites: {extracted_pages} sur {total_pages} pages totales")
-        content_parts.append(f"Caractères extraits: {len(text)}")
+        content_parts.append("📄 CONTENU COMPLET DU PAPER ARXIV")
+        content_parts.append(f"Pages totales extraites: {extracted_pages} pages")
+        content_parts.append(f"Caractères totaux: {len(text)}")
         content_parts.append("=" * 80)
         content_parts.append("")
         content_parts.append(text)
         content_parts.append("")
         content_parts.append("=" * 80)
-        content_parts.append(f"FIN DE L'EXTRACTION ({extracted_pages} pages)")
-        content_parts.append("Pour consulter le paper complet, utilisez le lien PDF ci-dessus.")
+        content_parts.append("FIN DU PAPER - CONTENU INTÉGRAL EXTRAIT")
         
         return '\n'.join(content_parts)

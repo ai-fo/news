@@ -33,5 +33,8 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # Longueur minimale du contenu RSS avant d'essayer de récupérer depuis la page
 MIN_CONTENT_LENGTH = 500
 
-# Longueur maximale du contenu à stocker
+# Longueur maximale du contenu à stocker (sauf pour arXiv)
 MAX_CONTENT_LENGTH = 5000
+
+# Pas de limite pour arXiv - on veut le PDF complet
+ARXIV_NO_LIMIT = True
