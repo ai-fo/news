@@ -7,7 +7,8 @@ SOURCES_NEED_FULL_CONTENT = [
     "TechCrunch AI",
     "VentureBeat AI",
     "L'Usine Digitale IA",
-    "AI Trends"
+    "AI Trends",
+    "KDnuggets"
 ]
 
 # Sources avec des restrictions d'accès (403 sur extraction)

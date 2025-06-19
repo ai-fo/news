@@ -186,18 +186,62 @@ class NewsletterScraper:
                 
                 articles = []
                 for model in models[:10]:  # Top 10 models
+                    model_id = model.get('modelId', '')
+                    
+                    # Récupérer le README du modèle
+                    readme_content = await self.fetch_huggingface_readme(session, model_id)
+                    
+                    # Créer un résumé plus détaillé
+                    summary_parts = []
+                    if model.get('pipeline_tag'):
+                        summary_parts.append(f"Type: {model.get('pipeline_tag')}")
+                    if model.get('downloads'):
+                        summary_parts.append(f"Downloads: {model.get('downloads'):,}")
+                    if model.get('likes'):
+                        summary_parts.append(f"Likes: {model.get('likes'):,}")
+                    if model.get('library_name'):
+                        summary_parts.append(f"Library: {model.get('library_name')}")
+                    
+                    # Construire le contenu complet
+                    content_parts = []
+                    
+                    # Ajouter les informations de base
+                    content_parts.append("=== INFORMATIONS DU MODÈLE ===")
+                    content_parts.append(f"Pipeline: {model.get('pipeline_tag', 'Non spécifié')}")
+                    content_parts.append(f"Bibliothèque: {model.get('library_name', 'Non spécifiée')}")
+                    content_parts.append(f"Auteur: {model.get('author', 'Non spécifié')}")
+                    content_parts.append(f"Dernière modification: {model.get('lastModified', 'Non spécifiée')}")
+                    
+                    # Ajouter les tags
+                    if model.get('tags'):
+                        content_parts.append(f"\nTags: {', '.join(model.get('tags', []))}")
+                    
+                    # Ajouter les données de la carte du modèle
+                    if model.get('cardData'):
+                        card_data = model.get('cardData', {})
+                        if card_data.get('license'):
+                            content_parts.append(f"Licence: {card_data.get('license')}")
+                        if card_data.get('language'):
+                            content_parts.append(f"Langues: {', '.join(card_data.get('language', []))}")
+                    
+                    # Ajouter le README si disponible
+                    if readme_content:
+                        content_parts.append("\n=== DESCRIPTION DU MODÈLE (README) ===")
+                        content_parts.append(readme_content)
+                    
                     article = {
                         "source": "Hugging Face Hub",
-                        "title": f"Model: {model.get('modelId', '')}",
-                        "link": f"https://huggingface.co/{model.get('modelId', '')}",
+                        "title": f"Model: {model_id}",
+                        "link": f"https://huggingface.co/{model_id}",
                         "published": model.get("lastModified", ""),
-                        "summary": f"Downloads: {model.get('downloads', 0)}, Likes: {model.get('likes', 0)}",
-                        "content": model.get("pipeline_tag", ""),
+                        "summary": " | ".join(summary_parts),
+                        "content": "\n".join(content_parts),
+                        "tags": model.get("tags", []),
                         "scraped_at": datetime.now().isoformat()
                     }
                     articles.append(article)
                 
-                print(f"✓ Hugging Face: {len(articles)} models")
+                print(f"✓ Hugging Face: {len(articles)} models avec contenu complet")
                 self.source_status["Hugging Face"] = {"status": "success", "count": len(articles), "error": None}
                 return articles
                 
@@ -205,6 +249,23 @@ class NewsletterScraper:
             print(f"✗ Erreur Hugging Face: {str(e)}")
             self.source_status["Hugging Face"] = {"status": "failed", "count": 0, "error": str(e)}
             return []
+    
+    async def fetch_huggingface_readme(self, session: aiohttp.ClientSession, model_id: str) -> str:
+        """Récupère le README d'un modèle Hugging Face"""
+        try:
+            readme_url = f"https://huggingface.co/{model_id}/raw/main/README.md"
+            async with session.get(readme_url, timeout=10) as response:
+                if response.status == 200:
+                    content = await response.text()
+                    # Limiter la longueur du README
+                    if len(content) > 5000:
+                        content = content[:5000] + "\n\n[... README tronqué à 5000 caractères ...]"
+                    return content
+                else:
+                    return ""
+        except Exception as e:
+            print(f"  ↳ Impossible de récupérer le README pour {model_id}: {str(e)}")
+            return ""
     
     async def scrape_github_trending(self, session: aiohttp.ClientSession) -> List[Dict]:
         try:
